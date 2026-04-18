@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "dataset-extractor"
+version = "0.1.0"
+description = "Agentic DocETL pipeline for extracting dataset references from scientific papers"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.30.0",
+    "pydantic>=2.0.0",
+    "pymupdf>=1.24.0",
+    "lxml>=5.0.0",
+    "beautifulsoup4>=4.12.0",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
+    "docetl>=0.2.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

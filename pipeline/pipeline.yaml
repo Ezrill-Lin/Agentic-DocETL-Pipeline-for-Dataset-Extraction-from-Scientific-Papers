@@ -1,0 +1,69 @@
+# DocETL Pipeline: Dataset Extraction from Scientific Papers
+#
+# Stages:
+#   1. parse_paper  — PDF/XML/HTML → text sections
+#   2. rtr          — LLM reads sections, extracts dataset refs
+#   3. fdr          — LLM repairs incomplete refs, validates URLs
+#   4. output       — writes per-paper JSON to data/output/
+#
+# Run:
+#   python run_pipeline.py --input data/input/
+#
+# Or invoke DocETL directly:
+#   docetl run pipeline/pipeline.yaml
+
+pipeline:
+  name: dataset_extraction
+
+datasets:
+  papers:
+    type: file
+    path: "data/input"
+    source: local
+
+operations:
+  - name: parse_paper
+    type: custom
+    module: "dataset_extractor.docetl_ops.operations"
+    function: "parse_paper_op"
+
+  - name: rtr
+    type: custom
+    module: "dataset_extractor.docetl_ops.operations"
+    function: "rtr_op"
+
+  - name: fdr
+    type: custom
+    module: "dataset_extractor.docetl_ops.operations"
+    function: "fdr_op"
+
+  - name: output
+    type: custom
+    module: "dataset_extractor.docetl_ops.operations"
+    function: "output_op"
+
+steps:
+  - name: parse
+    input: papers
+    operations:
+      - parse_paper
+
+  - name: extract
+    input: parse
+    operations:
+      - rtr
+
+  - name: repair_and_validate
+    input: extract
+    operations:
+      - fdr
+
+  - name: write_output
+    input: repair_and_validate
+    operations:
+      - output
+
+output:
+  type: file
+  path: "data/output/pipeline_results.json"
+  intermediate_dir: "data/output/intermediate"
