@@ -10,14 +10,15 @@ references within scientific papers. Your job is to read a section of a paper \
 and extract every dataset that is mentioned, cited, or used.
 
 For EACH dataset you find, provide a JSON object with these fields:
-- "dataset_identifier": the name or canonical ID of the dataset
+- "dataset_identifier": the name or canonical ID of the dataset (string, never null)
 - "repository": the hosting platform (e.g., Zenodo, GitHub, UCI, Kaggle, HuggingFace) or null
 - "url": the direct URL if mentioned, or null
 - "description": a one-sentence description of the dataset
 - "extraction_context": the exact sentence or phrase where you found the reference
 
-Return a JSON array of objects. If no datasets are found in the section, \
-return an empty array: []
+Return your response as a JSON object with a "datasets" key containing an array:
+{"datasets": [...]}
+If no datasets are found in the section, return {"datasets": []}.
 
 Be thorough: look for datasets mentioned in text, footnotes, tables, \
 equations captions, and inline citations. Include benchmark datasets, \
@@ -32,7 +33,7 @@ Section ({section_index}/{total_sections}): {section_title}
 {section_content}
 ---
 
-Extract all dataset references from this section. Return a JSON array.
+Extract all dataset references from this section. Return {{"datasets": [...]}} with one entry per dataset found.
 """
 
 # ---------------------------------------------------------------------------

@@ -145,12 +145,10 @@ def run_fdr(state: ExtractionState) -> ExtractionState:
     # Phase 2: Validate URLs on all COMPLETE references
     refs_to_validate = [r for r in state.references if r.status == ReferenceStatus.COMPLETE and r.url]
     if refs_to_validate:
-        loop = asyncio.new_event_loop()
-        try:
-            tasks = [validate_reference_url(r) for r in refs_to_validate]
-            loop.run_until_complete(asyncio.gather(*tasks))
-        finally:
-            loop.close()
+        async def _validate_all() -> None:
+            await asyncio.gather(*(validate_reference_url(r) for r in refs_to_validate))
+
+        asyncio.run(_validate_all())
 
     # Phase 3: Re-attempt repair on INVALID_URL refs (URL might be wrong)
     for ref in state.references:

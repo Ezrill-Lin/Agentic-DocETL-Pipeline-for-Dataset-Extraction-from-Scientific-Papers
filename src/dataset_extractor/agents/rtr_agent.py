@@ -25,7 +25,7 @@ def _build_client() -> OpenAI:
 
 
 def _parse_llm_json(raw: str) -> list[dict[str, Any]]:
-    """Robustly parse a JSON array from LLM output."""
+    """Robustly parse a JSON array (or wrapped object) from LLM output."""
     raw = raw.strip()
     # Strip markdown code fences if present
     if raw.startswith("```"):
@@ -36,7 +36,6 @@ def _parse_llm_json(raw: str) -> list[dict[str, Any]]:
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        # Try extracting array substring
         start = raw.find("[")
         end = raw.rfind("]")
         if start != -1 and end != -1:
@@ -44,8 +43,17 @@ def _parse_llm_json(raw: str) -> list[dict[str, Any]]:
         else:
             logger.warning("Failed to parse LLM JSON output: %s", raw[:200])
             return []
+
+    # Unwrap {"datasets": [...]} envelope (required by json_object response_format)
     if isinstance(parsed, dict):
-        parsed = [parsed]
+        for key in ("datasets", "data", "results", "references"):
+            if key in parsed and isinstance(parsed[key], list):
+                parsed = parsed[key]
+                break
+        else:
+            # Single-item flat object — wrap it
+            parsed = [parsed]
+
     return parsed if isinstance(parsed, list) else []
 
 
@@ -87,15 +95,19 @@ def extract_from_section(
 
     refs: list[DatasetReference] = []
     for item in items:
+        identifier = item.get("dataset_identifier") or "Unknown"
+        # Skip placeholder items with no meaningful content
+        if identifier == "Unknown" and not item.get("url") and not item.get("description"):
+            continue
         status = ReferenceStatus.COMPLETE if item.get("url") else ReferenceStatus.INCOMPLETE
         ref = DatasetReference(
-            dataset_identifier=item.get("dataset_identifier", "Unknown"),
-            repository=item.get("repository"),
-            url=item.get("url"),
-            description=item.get("description"),
+            dataset_identifier=identifier,
+            repository=item.get("repository") or None,
+            url=item.get("url") or None,
+            description=item.get("description") or None,
             paper_source=paper.paper_id,
             status=status,
-            extraction_context=item.get("extraction_context"),
+            extraction_context=item.get("extraction_context") or None,
         )
         refs.append(ref)
 

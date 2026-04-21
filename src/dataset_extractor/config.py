@@ -9,8 +9,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# OpenAI
-OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+# OpenAI — supports both the standard name and the common typo variant
+OPENAI_API_KEY: str = (
+    os.getenv("OPENAI_API_KEY")
+    or os.getenv("OPAI_API_KEY")
+    or ""
+)
 OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 # Pipeline behaviour

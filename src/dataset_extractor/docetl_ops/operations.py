@@ -70,7 +70,12 @@ def rtr_op(doc: dict[str, Any]) -> dict[str, Any]:
     try:
         state = run_rtr(state)
         log_event(logger, "rtr_op_done", paper_id=paper.paper_id, refs=len(state.references))
-        return {**doc, "_state_json": state.model_dump_json(), "_error": None}
+        return {
+            **doc,
+            "_state_json": state.model_dump_json(),
+            "references_count": len(state.references),
+            "_error": None,
+        }
     except Exception as exc:  # noqa: BLE001
         log_event(logger, "rtr_op_error", paper_id=paper.paper_id, error=str(exc), level="error")
         return {**doc, "_state_json": None, "_error": f"rtr: {exc}"}
